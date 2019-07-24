@@ -8,6 +8,15 @@ err() {
   echo "$*" >&2;
 }
 
+case $1 in
+  "-r" | "--restore")
+    RESTORE=true
+  ;;
+  *)
+    RESTORE=false
+  ;;
+esac
+
 PROPERTIES_FILE="$HOME/spinnaker-for-gcp/scripts/install/properties"
 
 source "$PROPERTIES_FILE"
@@ -263,7 +272,7 @@ job_ready() {
 
 job_ready hal-deploy-apply
 
-~/spinnaker-for-gcp/scripts/manage/update_landing_page.sh
+if ! $RESTORE ; then ~/spinnaker-for-gcp/scripts/manage/update_landing_page.sh ; fi
 ~/spinnaker-for-gcp/scripts/manage/deploy_application_manifest.sh
 
 # Delete any existing deployment config secret.
@@ -283,8 +292,14 @@ EXISTING_CLOUD_FUNCTION=$(gcloud functions list --project $PROJECT_ID \
 if [ -z "$EXISTING_CLOUD_FUNCTION" ]; then
   bold "Deploying audit log cloud function $CLOUD_FUNCTION_NAME..."
 
-  cat ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/config_json.template | envsubst > ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/config.json
-  cat ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/index_js.template | envsubst > ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/index.js
+  if [ ! -e ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/config.json ]; then
+    cat ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/config_json.template | envsubst > ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/config.json
+  fi
+
+  if [ ! -e ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/index.js ]; then
+    cat ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/index_js.template | envsubst > ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/index.js
+  fi  
+
   gcloud functions deploy $CLOUD_FUNCTION_NAME --source ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog \
     --trigger-http --memory 2048MB --runtime nodejs8 --project $PROJECT_ID
 else
