@@ -6,15 +6,6 @@ bold() {
 
 ~/spinnaker-for-gcp/scripts/manage/check_git_config.sh || exit 1
 
-# Sync cloudshell config with cluster.
-~/spinnaker-for-gcp/scripts/manage/pull_config.sh
-
-source ~/spinnaker-for-gcp/scripts/install/properties &> /dev/null
-
-deleteExistingCloudFunc() {
-  gcloud functions delete $CLOUD_FUNCTION_NAME --project $PROJECT_ID -q
-}
-
 if [ -z "$1" ]; then
   bold "Project id is required"
   exit 1
@@ -34,19 +25,15 @@ pushd $TEMP_DIR
 
 EXISTING_CSR_REPO=$(gcloud source repos list --format="value(name)" --filter="name=projects/$PROJECT_ID/repos/$CONFIG_CSR_REPO" --project=$PROJECT_ID)
 
-if [ -z "$EXISTING_CSR_REPO" ]; then
+if [ -n "$EXISTING_CSR_REPO" ]; then
   gcloud source repos clone $CONFIG_CSR_REPO --project=$PROJECT_ID
 else
   popd
   rm -rf $TEMP_DIR
+  exit
 fi
 
-if [ -n "$GIT_HASH" ]; then
-    bold "Compare $GIT_HASH to the most recent backup:"
-    bold "https://source.cloud.google.com/restore-test-249019/spinnaker-1-config/+/$GIT_HASH...master"
-fi
-
-read -p ". $(tput bold)You are about to restore a backup configuration. This step is not reversible. Do you wish to continue (Y/n)? $(tput sgr0)" yn
+read -p ". $(tput bold)You are about to replace the properties file and halyard configuration in your cloudshell with the configuration at https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH. This step is not reversible. Do you wish to continue (Y/n)? $(tput sgr0)" yn
 case $yn in
   [Yy]* ) ;;
   "" ) ;;
@@ -56,13 +43,6 @@ case $yn in
     exit
   ;;
 esac
-
-EXISTING_CLOUD_FUNCTION=$(gcloud functions list --project $PROJECT_ID \
-  --format="value(name)" --filter="entryPoint=$CLOUD_FUNCTION_NAME")
-
-if [ -n "$EXISTING_CLOUD_FUNCTION" ]; then
-  deleteExistingCloudFunc 
-fi
 
 cd $CONFIG_CSR_REPO
 if [ -n "$GIT_HASH" ]; then
@@ -120,22 +100,13 @@ remove_and_copy openapi_expanded.yml ~/spinnaker-for-gcp/scripts/expose/openapi_
 remove_and_copy config ~/.spin/config
 remove_and_copy key.json ~/.spin/key.json
 
-HALYARD_POD=spin-halyard-0
-EXISTING_HAL_POD_NAME=$(kubectl get pods -n halyard --field-selector metadata.name="$HALYARD_POD" -o json | jq -r  .items[0].metadata.name)
-
-if [ $EXISTING_HAL_POD_NAME != 'null' ]; then
-  # Remove old persistent config so new config can be copied into place.
-  bold "Removing halyard/$HALYARD_POD:/home/spinnaker/.hal..."
-  kubectl -n halyard exec -it $HALYARD_POD -- bash -c "rm -rf ~/.hal/*"
-
-  # Copy new config into place.
-  bold "Copying $HOME/.hal into halyard/$HALYARD_POD:/home/spinnaker/.hal..."
-
-  kubectl -n halyard cp $TEMP_DIR/$CONFIG_CSR_REPO/.hal spin-halyard-0:/home/spinnaker
-fi
-
 popd
 rm -rf $TEMP_DIR
 
-~/spinnaker-for-gcp/scripts/install/setup.sh -r
-~/spinnaker-for-gcp/scripts/manage/update_console.sh
+bold "The configuration at https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH has been restored to your cloudshell"
+
+if [ -n "$GIT_HASH" ]; then
+  bold "To diff this configuration to what last deployed, go to https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH...master"
+fi
+
+bold "To apply the changes in the halyard config, run ~/spinnaker-for-gcp/scripts/manage/push_and_apply.sh. To apply the changes in the properties file, run ~/spinnaker-for-gcp/scripts/install/setup.sh"
