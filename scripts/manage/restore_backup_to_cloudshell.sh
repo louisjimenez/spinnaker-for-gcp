@@ -6,19 +6,31 @@ bold() {
 
 ~/spinnaker-for-gcp/scripts/manage/check_git_config.sh || exit 1
 
-if [ -z "$1" ]; then
-  bold "Project id is required"
+while getopts ":p:r:h:" options; do
+  case $options in
+    p ) PROJECT_ID=$OPTARG ;;
+    r ) CONFIG_CSR_REPO=$OPTARG ;;
+    h ) GIT_HASH=$OPTARG ;;
+    \? ) bold "invalid option supplied: -$OPTARG"
+  esac
+done
+
+EXAMPLE_COMMAND="'restore_backup_to_cloudshell.sh -p PROJECT -r REPOSITORY_NAME -h GIT_HASH'"
+
+if [ -z "$PROJECT_ID" ]; then
+  bold "Project id is required. $EXAMPLE_COMMAND"
   exit 1
 fi
 
-if [ -z "$2" ]; then
-  bold "Repository name is required"
+if [ -z "$CONFIG_CSR_REPO" ]; then
+  bold "Cloud Source repository name is required. $EXAMPLE_COMMAND"
   exit 1
 fi
 
-PROJECT_ID=$1
-CONFIG_CSR_REPO=$2
-GIT_HASH=$3
+if [ -z "$GIT_HASH" ]; then
+  bold "Git commit hash is required. $EXAMPLE_COMMAND"
+  exit 1
+fi
 
 TEMP_DIR=$(mktemp -d -t halyard.XXXXX)
 pushd $TEMP_DIR
@@ -28,12 +40,15 @@ EXISTING_CSR_REPO=$(gcloud source repos list --format="value(name)" --filter="na
 if [ -n "$EXISTING_CSR_REPO" ]; then
   gcloud source repos clone $CONFIG_CSR_REPO --project=$PROJECT_ID
 else
+  bold "Cloud source repository $CONFIG_CSR_REPO not found"
   popd
   rm -rf $TEMP_DIR
   exit
 fi
 
-read -p ". $(tput bold)You are about to replace the properties file and halyard configuration in your cloudshell with the configuration at https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH. This step is not reversible. Do you wish to continue (Y/n)? $(tput sgr0)" yn
+HASH_PREVIEW_LINK="https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH"
+
+read -p ". $(tput bold)You are about to replace the configuration files in your cloudshell with the configuration at $HASH_PREVIEW_LINK . This step is not reversible. Do you wish to continue (Y/n)? $(tput sgr0)" yn
 case $yn in
   [Yy]* ) ;;
   "" ) ;;
@@ -45,9 +60,7 @@ case $yn in
 esac
 
 cd $CONFIG_CSR_REPO
-if [ -n "$GIT_HASH" ]; then
- git checkout $GIT_HASH &> /dev/null
-fi
+git checkout $GIT_HASH &> /dev/null
 
 # Remove local hal config so persistent config from backup can be copied into place.
 bold "Removing $HOME/.hal..."
@@ -89,24 +102,20 @@ remove_and_copy() {
 }
 
 cd deployment_config_files
-bold "Restoring deployment config..."
+bold "Restoring deployment config... from $CONFIG_CSR_REPO"
 remove_and_copy properties ~/spinnaker-for-gcp/scripts/install/properties 
 remove_and_copy config.json ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/config.json
 remove_and_copy index.js ~/spinnaker-for-gcp/scripts/install/spinnakerAuditLog/index.js
 remove_and_copy landing_page_expanded.md ~/spinnaker-for-gcp/scripts/manage/landing_page_expanded.md
 
-remove_and_copy configure_iap_expanded ~/spinnaker-for-gcp/scripts/expose/configure_iap_expanded.md
+remove_and_copy configure_iap_expanded.md ~/spinnaker-for-gcp/scripts/expose/configure_iap_expanded.md
 remove_and_copy openapi_expanded.yml ~/spinnaker-for-gcp/scripts/expose/openapi_expanded.yml
+mkdir -p ~/.spin
 remove_and_copy config ~/.spin/config
 remove_and_copy key.json ~/.spin/key.json
 
 popd
 rm -rf $TEMP_DIR
 
-bold "The configuration at https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH has been restored to your cloudshell"
-
-if [ -n "$GIT_HASH" ]; then
-  bold "To diff this configuration to what last deployed, go to https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH...master"
-fi
-
-bold "To apply the changes in the halyard config, run ~/spinnaker-for-gcp/scripts/manage/push_and_apply.sh. To apply the changes in the properties file, run ~/spinnaker-for-gcp/scripts/install/setup.sh"
+bold "Configuration applied. To diff this config with what was last deployed, go to https://source.cloud.google.com/$PROJECT_ID/$EXISTING_CSR_REPO/+/$GIT_HASH...master"
+bold "To apply the halyard config changes to the cluster, run ~/spinnaker-for-gcp/scripts/manage/push_and_apply.sh. To apply changes in the properties file to your deployment, run ~/spinnaker-for-gcp/scripts/install/setup.sh"
