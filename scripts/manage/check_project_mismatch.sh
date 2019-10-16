@@ -4,7 +4,11 @@ bold() {
   echo ". $(tput bold)" "$*" "$(tput sgr0)";
 }
 
-source ~/spinnaker-for-gcp/scripts/install/properties
+[ -z "$REPO_PATH" ] && REPO_PATH="$HOME"
+
+[ -z "$PROPERTIES_FILE" ] && PROPERTIES_FILE="$REPO_PATH/spinnaker-for-gcp/scripts/install/properties"
+
+source "$PROPERTIES_FILE"
 
 GCLOUD_PROJECT_ID=$(gcloud info --format='value(config.project)')
 GCLOUD_PROJECT_ID=${GCLOUD_PROJECT_ID:-'not set'}
