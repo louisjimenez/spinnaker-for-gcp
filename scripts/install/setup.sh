@@ -20,7 +20,7 @@ REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/sc
 
 OPERATOR_SA_EMAIL=$(gcloud config list account --format "value(core.account)")
 
-SETUP_REQUIRED_ROLES=(compute.networkViewer container.developer iam.serviceAccountCreator redis.viewer serviceusage.serviceUsageViewer storage.admin pubsub.editor)
+SETUP_REQUIRED_ROLES=(compute.networkViewer container.developer iam.serviceAccountCreator redis.viewer serviceusage.serviceUsageViewer storage.admin pubsub.editor cloudfunctions.developer source.admin)
 SETUP_EXISTING_ROLES=$(gcloud projects get-iam-policy --filter bindings.members:$OPERATOR_SA_EMAIL $PROJECT_ID \
   --flatten bindings[].members --format="value(bindings.role)")
 
@@ -344,9 +344,9 @@ if [ "$USE_CLOUD_SHELL_HAL_CONFIG" = true ] ; then
   $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_and_apply.sh
 else
   # We want the local hal config to match what was deployed.
-  $REPO_PATH/spinnaker-for-gcp/scripts/manage/pull_config.sh
+  REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/pull_config.sh
   # We want a full backup stored in the bucket and the full deployment config stored in a secret.
-  $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_config.sh
+  REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_config.sh
 fi
 
 deploy_ready() {

@@ -14,7 +14,7 @@ if [ ! -f "$PROPERTIES_FILE" ]; then
   exit 0
 fi
 
-source $REPO_PATH/spinnaker-for-gcp/scripts/install/properties
+source "$PROPERTIES_FILE"
 
 # Query for static ip address as a signal that the Spinnaker installation is exposed via a secured endpoint.
 export IP_ADDR=$(gcloud compute addresses list --filter="name=$STATIC_IP_NAME" \
