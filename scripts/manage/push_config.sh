@@ -139,7 +139,7 @@ copy_if_exists $REPO_PATH/.spin/key.json deployment_config_files "$PROJECT_ID\."
 
 # Remove old persistent config so new config can be copied into place.
 bold "Removing halyard/$HALYARD_POD:/home/spinnaker/.hal..."
-kubectl -n halyard exec -it $HALYARD_POD -- bash -c "rm -rf $REPO_PATH/.hal/*"
+kubectl -n halyard exec $HALYARD_POD -- bash -c "rm -rf $REPO_PATH/.hal/*"
 
 # Copy new config into place.
 bold "Copying $REPO_PATH/.hal into halyard/$HALYARD_POD:/home/spinnaker/.hal..."
