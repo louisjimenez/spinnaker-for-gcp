@@ -4,7 +4,7 @@ bold() {
   echo ". $(tput bold)" "$*" "$(tput sgr0)";
 }
 
-[ -z "$REPO_PATH" ] && REPO_PATH="$REPO_PATH"
+[ -z "$REPO_PATH" ] && REPO_PATH="$HOME"
 
 rewrite_hal_key_paths() {
   REWRITABLE_KEYS=(kubeconfigFile jsonPath jsonKey passwordFile path templatePath)

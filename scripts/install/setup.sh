@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
-bold() {
-  echo ". $(tput bold)" "$*" "$(tput sgr0)";
-}
-
 err() {
   echo "$*" >&2;
 }
+
+source $REPO_PATH/spinnaker-for-gcp/scripts/manage/service_utils.sh
 
 [ -z "$REPO_PATH" ] && REPO_PATH="$HOME"
 
@@ -20,13 +18,13 @@ REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/sc
 
 OPERATOR_SA_EMAIL=$(gcloud config list account --format "value(core.account)")
 
-SETUP_REQUIRED_ROLES=(compute.networkViewer container.developer iam.serviceAccountCreator redis.viewer serviceusage.serviceUsageViewer storage.admin pubsub.editor cloudfunctions.developer source.admin)
+SETUP_REQUIRED_ROLES=(cloudfunctions.developer compute.networkViewer container.developer iam.serviceAccountCreator pubsub.editor redis.viewer serviceusage.serviceUsageAdmin source.admin storage.admin)
 SETUP_EXISTING_ROLES=$(gcloud projects get-iam-policy --filter bindings.members:$OPERATOR_SA_EMAIL $PROJECT_ID \
   --flatten bindings[].members --format="value(bindings.role)")
 
 if [ -z "$SETUP_EXISTING_ROLES" ]; then
-  bold "Unable to verify the service account $OPERATOR_SA_EMAIL has the required IAM roles."
-  bold "$OPERATOR_SA_EMAIL requires the IAM role \"Project IAM Admin\" to proceed with the script."
+  bold "Unable to verify that the service account \"$OPERATOR_SA_EMAIL\" has the required IAM roles."
+  bold "\"$OPERATOR_SA_EMAIL\" requires the IAM role \"Project IAM Admin\" to proceed."
   exit 1
 fi
 
@@ -42,8 +40,8 @@ for r in "${SETUP_REQUIRED_ROLES[@]}"; do
 done
 
 if [ -n "$MISSING_ROLES" ]; then 
-  bold "The service account being used for setup, $OPERATOR_SA_EMAIL, is missing the following required role(s): $MISSING_ROLES."
-  bold "Add the required role(s) and try rerunning the script."
+  bold "The service account in use, \"$OPERATOR_SA_EMAIL\", is missing the following required role(s): $MISSING_ROLES."
+  bold "Add the required role(s) and try re-running the script."
   exit 1
 fi
 
@@ -61,8 +59,6 @@ if [ $NUM_ENABLED_APIS != $NUM_REQUIRED_APIS ]; then
 
   gcloud services --project $PROJECT_ID enable $REQUIRED_APIS
 fi
-
-source $REPO_PATH/spinnaker-for-gcp/scripts/manage/service_utils.sh
 
 if [ "$PROJECT_ID" != "$NETWORK_PROJECT" ]; then
   # Cloud Memorystore for Redis requires the Redis instance to be deployed in the Shared VPC
@@ -340,7 +336,7 @@ else
   bold "Using existing audit log cloud function $CLOUD_FUNCTION_NAME..."
 fi
 
-if [ "$USE_CLOUD_SHELL_HAL_CONFIG" = true ] ; then
+if [ "$USE_CLOUD_SHELL_HAL_CONFIG" = true ]; then
   $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_and_apply.sh
 else
   # We want the local hal config to match what was deployed.
@@ -367,11 +363,13 @@ deploy_ready spin-orca "orchestration engine"
 deploy_ready spin-kayenta "canary analysis engine"
 deploy_ready spin-deck "UI server"
 
-$REPO_PATH/spinnaker-for-gcp/scripts/cli/install_hal.sh --version $HALYARD_VERSION
-$REPO_PATH/spinnaker-for-gcp/scripts/cli/install_spin.sh
+if [ "$CI_MODE" != true ]; then
+  $REPO_PATH/spinnaker-for-gcp/scripts/cli/install_hal.sh --version $HALYARD_VERSION
+  $REPO_PATH/spinnaker-for-gcp/scripts/cli/install_spin.sh
 
-# We want a backup containing the newly-created ~/.spin/* files as well.
-$REPO_PATH/spinnaker-for-gcp/scripts/manage/push_config.sh
+  # We want a backup containing the newly-created ~/.spin/* files as well.
+  $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_config.sh  
+fi
 
 # If restoring a secured endpoint, leave the user on the documentation for iap configuration.
 if [ "$USE_CLOUD_SHELL_HAL_CONFIG" = true -a -n "$IP_ADDR" ] ; then

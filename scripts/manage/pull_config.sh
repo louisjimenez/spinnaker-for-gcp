@@ -4,7 +4,7 @@ bold() {
   echo ". $(tput bold)" "$*" "$(tput sgr0)";
 }
 
-[ -z "$REPO_PATH" ] && REPO_PATH="$REPO_PATH"
+[ -z "$REPO_PATH" ] && REPO_PATH="$HOME"
 
 [ -z "$PROPERTIES_FILE" ] && PROPERTIES_FILE="$REPO_PATH/spinnaker-for-gcp/scripts/install/properties"
 

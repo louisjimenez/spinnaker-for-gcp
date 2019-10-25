@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
 bold() {
-  echo ". $(tput bold)" "$*" "$(tput sgr0)";
+  if [ "$CI_MODE" != true ]; then
+    echo ". $(tput bold)" "$*" "$(tput sgr0)";
+  else
+    echo "$*"
+  fi
 }
 
 has_service_enabled() {
