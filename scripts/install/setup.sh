@@ -372,7 +372,7 @@ if [ "$CI_MODE" != true ]; then
 fi
 
 # If restoring a secured endpoint, leave the user on the documentation for iap configuration.
-if [ "$USE_CLOUD_SHELL_HAL_CONFIG" = true -a -n "$IP_ADDR" ] ; then
+if [ "$USE_CLOUD_SHELL_HAL_CONFIG" = true -a -n "$IP_ADDR" ]; then
   $REPO_PATH/spinnaker-for-gcp/scripts/expose/launch_configure_iap.sh
 fi
 
