@@ -6,6 +6,25 @@ err() {
 
 source $REPO_PATH/spinnaker-for-gcp/scripts/manage/service_utils.sh
 
+REQUIRED_BINARIES=(git gcloud jq kubectl)
+
+MISSING_BINARIES=""
+for b in "${REQUIRED_BINARIES[@]}"; do
+  BINARY_PATH=$(check_for_command $b)
+  if [ -z "$BINARY_PATH" ]; then
+    if [ -z $MISSING_BINARIES ]; then
+      MISSING_BINARIES="$b"
+    else 
+      MISSING_BINARIES="$MISSING_BINARIES, $b"
+    fi
+  fi
+done
+
+if [ -n "$MISSING_BINARIES" ]; then 
+  bold "The following command(s) are required for setup but were not found: $MISSING_BINARIES"
+  exit 1
+fi
+
 [ -z "$REPO_PATH" ] && REPO_PATH="$HOME"
 
 $REPO_PATH/spinnaker-for-gcp/scripts/manage/check_git_config.sh || exit 1

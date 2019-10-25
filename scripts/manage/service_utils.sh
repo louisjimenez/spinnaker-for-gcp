@@ -13,3 +13,8 @@ has_service_enabled() {
     --filter="config.name:$2" \
     --format="value(config.name)"
 }
+
+check_for_command() {
+  COMMAND_PRESENT=$(command -v $1)
+  echo $COMMAND_PRESENT
+}
