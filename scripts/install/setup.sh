@@ -37,7 +37,7 @@ REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/sc
 
 OPERATOR_SA_EMAIL=$(gcloud config list account --format "value(core.account)")
 
-SETUP_REQUIRED_ROLES=(cloudfunctions.developer compute.networkViewer container.admin iam.serviceAccountCreator pubsub.editor redis.admin serviceusage.serviceUsageAdmin source.admin storage.admin)
+SETUP_REQUIRED_ROLES=(cloudfunctions.developer compute.networkViewer container.admin iam.serviceAccountCreator iam.serviceAccountUser pubsub.editor redis.admin serviceusage.serviceUsageAdmin source.admin storage.admin)
 SETUP_EXISTING_ROLES=$(gcloud projects get-iam-policy --filter bindings.members:$OPERATOR_SA_EMAIL $PROJECT_ID \
   --flatten bindings[].members --format="value(bindings.role)")
 
@@ -327,11 +327,9 @@ job_ready() {
 
 job_ready hal-deploy-apply
 
-if [ "$CI" != true ]; then
-  # Sourced to import $IP_ADDR. 
-  # Used at the end of setup to check if installation is exposed via a secured endpoint.
-  source $REPO_PATH/spinnaker-for-gcp/scripts/manage/update_landing_page.sh
-fi
+# Sourced to import $IP_ADDR. 
+# Used at the end of setup to check if installation is exposed via a secured endpoint.
+source $REPO_PATH/spinnaker-for-gcp/scripts/manage/update_landing_page.sh
 
 REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/deploy_application_manifest.sh
 
