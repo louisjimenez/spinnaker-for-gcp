@@ -33,6 +33,11 @@ REPO_PATH=$REPO_PATH $REPO_PATH/spinnaker-for-gcp/scripts/manage/check_git_confi
 
 source "$PROPERTIES_FILE"
 
+if [ "$PROJECT_ID" != "$NETWORK_PROJECT" -a "$CI" = true ]; then
+ bold "Automated setup of Spinnaker for GCP with a Shared VPC host project is currently unsupported. To proceed, continue the setup in Cloud Shell."
+ exit 1
+fi
+
 REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/check_project_mismatch.sh
 
 OPERATOR_SA_EMAIL=$(gcloud config list account --format "value(core.account)")
