@@ -40,20 +40,20 @@ fi
 
 REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/check_project_mismatch.sh
 
-OPERATOR_SA_EMAIL=$(gcloud config list account --format "value(core.account)")
+if [ "$CI" = true ]; then
+  OPERATOR_SA_EMAIL=$(gcloud config list account --format "value(core.account)")
 
-SETUP_REQUIRED_ROLES=(cloudfunctions.developer compute.networkViewer container.admin iam.serviceAccountCreator iam.serviceAccountUser pubsub.editor redis.admin serviceusage.serviceUsageAdmin source.admin storage.admin)
-SETUP_EXISTING_ROLES=$(gcloud projects get-iam-policy --filter bindings.members:$OPERATOR_SA_EMAIL $PROJECT_ID \
-  --flatten bindings[].members --format="value(bindings.role)")
+  SETUP_REQUIRED_ROLES=(cloudfunctions.developer compute.networkViewer container.admin iam.serviceAccountCreator iam.serviceAccountUser pubsub.editor redis.admin serviceusage.serviceUsageAdmin source.admin storage.admin)
+  SETUP_EXISTING_ROLES=$(gcloud projects get-iam-policy --filter bindings.members:$OPERATOR_SA_EMAIL $PROJECT_ID \
+    --flatten bindings[].members --format="value(bindings.role)")
 
-if [ -z "$SETUP_EXISTING_ROLES" ]; then
-  bold "Unable to verify that the service account \"$OPERATOR_SA_EMAIL\" has the required IAM roles."
-  bold "\"$OPERATOR_SA_EMAIL\" requires the IAM role \"Project IAM Admin\" to proceed."
-  exit 1
-fi
+  if [ -z "$SETUP_EXISTING_ROLES" ]; then
+    bold "Unable to verify that the service account \"$OPERATOR_SA_EMAIL\" has the required IAM roles."
+    bold "\"$OPERATOR_SA_EMAIL\" requires the IAM role \"Project IAM Admin\" to proceed."
+    exit 1
+  fi
 
-MISSING_ROLES=""
-if [ -z "$(echo $SETUP_EXISTING_ROLES | grep roles/owner)" -a -z "$(echo $SETUP_EXISTING_ROLES | grep roles/editor)" ]; then
+  MISSING_ROLES=""
   for r in "${SETUP_REQUIRED_ROLES[@]}"; do
     if [ -z "$(echo $SETUP_EXISTING_ROLES | grep $r)" ]; then
       if [ -z $MISSING_ROLES ]; then
@@ -63,12 +63,12 @@ if [ -z "$(echo $SETUP_EXISTING_ROLES | grep roles/owner)" -a -z "$(echo $SETUP_
       fi
     fi
   done
-fi
 
-if [ -n "$MISSING_ROLES" ]; then 
-  bold "The service account in use, \"$OPERATOR_SA_EMAIL\", is missing the following required role(s): $MISSING_ROLES."
-  bold "Add the required role(s) and try re-running the script."
-  exit 1
+  if [ -n "$MISSING_ROLES" ]; then 
+    bold "The service account in use, \"$OPERATOR_SA_EMAIL\", is missing the following required role(s): $MISSING_ROLES."
+    bold "Add the required role(s) and try re-running the script."
+    exit 1
+  fi
 fi
 
 REQUIRED_APIS="cloudbuild.googleapis.com cloudfunctions.googleapis.com container.googleapis.com endpoints.googleapis.com iap.googleapis.com monitoring.googleapis.com redis.googleapis.com sourcerepo.googleapis.com"
