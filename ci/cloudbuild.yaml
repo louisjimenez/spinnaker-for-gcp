@@ -1,0 +1,13 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-f', 'Dockerfile', '-t', 'runner', '.']
+- name: gcr.io/cloud-builders/git
+  args: ['clone', 'https://github.com/louisjimenez/spinnaker-for-gcp.git']  
+- name: gcr.io/cloud-builders/git
+  args: ['config', '--global', 'user.name', 'cloudbuild-user']
+- name: gcr.io/cloud-builders/git
+  args: ['config', '--global', 'user.email', 'cloudbuild-user@example.com']
+- name: 'runner'
+  args: ['bash', './start.bash']
+  env:
+  - 'TERM=xterm'  
