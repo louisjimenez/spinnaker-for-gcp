@@ -4,4 +4,4 @@ RUN apt-get -q update && apt-get install -qqy \
   jq \
   gettext-base
 
-ENTRYPOINT ["/usr/bin/env"]
+ENTRYPOINT []
