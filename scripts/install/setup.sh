@@ -38,7 +38,7 @@ if [ "$PROJECT_ID" != "$NETWORK_PROJECT" -a "$CI" = true ]; then
  exit 1
 fi
 
-REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/check_project_mismatch.sh
+REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES_FILE $REPO_PATH/spinnaker-for-gcp/scripts/manage/check_project_mismatch.sh
 
 if [ "$CI" = true ]; then
   OPERATOR_SA_EMAIL=$(gcloud config list account --format "value(core.account)")
@@ -336,7 +336,7 @@ job_ready hal-deploy-apply
 # Used at the end of setup to check if installation is exposed via a secured endpoint.
 source $REPO_PATH/spinnaker-for-gcp/scripts/manage/update_landing_page.sh
 
-REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/deploy_application_manifest.sh
+REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES_FILE $REPO_PATH/spinnaker-for-gcp/scripts/manage/deploy_application_manifest.sh
 
 # Delete any existing deployment config secret.
 # It will be recreated with up-to-date contents during push_config.sh.
@@ -367,9 +367,9 @@ if [ "$USE_CLOUD_SHELL_HAL_CONFIG" = true ]; then
   $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_and_apply.sh
 else
   # We want the local hal config to match what was deployed.
-  REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/pull_config.sh
+  REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES_FILE $REPO_PATH/spinnaker-for-gcp/scripts/manage/pull_config.sh
   # We want a full backup stored in the bucket and the full deployment config stored in a secret.
-  REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_config.sh
+  REPO_PATH=$REPO_PATH PROPERTIES_FILE=$PROPERTIES_FILE $REPO_PATH/spinnaker-for-gcp/scripts/manage/push_config.sh
 fi
 
 deploy_ready() {
