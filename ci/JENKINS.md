@@ -74,14 +74,14 @@ git clone https://github.com/GoogleCloudPlatform/spinnaker-for-gcp.git
 git config --global user.name "jenkins-user"
 git config --global user.email "jenkins-user@example.com"
 
-REPO_PATH=$WORKSPACE PROPERTIES_FILE=$PROPERTIES CI=true $WORKSPACE/spinnaker-for-gcp/scripts/install/setup.sh
+PARENT_DIR=$WORKSPACE PROPERTIES_FILE=$PROPERTIES CI=true $WORKSPACE/spinnaker-for-gcp/scripts/install/setup.sh
 ```
 
 In the above example, the git `user.name` and `user.email` are configured prior to running `setup.sh`. This step is required for `setup.sh` to run successfully. Git operations can also be managed using the [Jenkins Git plugin](https://plugins.jenkins.io/git).
 
 `setup.sh` requires several variables to be passed in:
 
-- `REPO_PATH`: The absolute path for the Jenkins workspace. Jenkins makes this available via `$WORKSPACE`.
+- `PARENT_DIR`: The absolute path for the Jenkins workspace. Jenkins makes this available via `$WORKSPACE`.
 - `PROPERTIES_FILE`: This is the absolute path to the your generated Spinnaker for GCP properties file.
 - `CI`: This must be set to `true` when running `setup.sh` outside of Cloud Shell.
 

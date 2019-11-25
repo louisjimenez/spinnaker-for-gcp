@@ -6,7 +6,7 @@ Please note that using Cloud Build to install Spinnaker for GCP with a Shared VP
 
 ## Service account
 
-Google Cloud Build has a default service account that can be found in the settings page of the Cloud Build UI. The Cloud Build service account must be configured with the following roles to install Spinnaker for GCP:
+Google Cloud Build has a default service account that can be found in the settings page of the Cloud Build UI. The Cloud Build service account must be granted the following roles to install Spinnaker for GCP:
 
 - Cloud Functions Developer - roles/cloudfunctions.developer
 - Compute Network Viewer - roles/compute.networkViewer
@@ -28,7 +28,7 @@ In order to install Spinnaker for GCP, you must provide the installation script 
 
 ## Submitting a Build
 
-Cloud Builds can be trigged using [gcloud](https://cloud.google.com/cloud-build/docs/running-builds/start-build-manually), [build triggers](https://cloud.google.com/cloud-build/docs/running-builds/automate-builds), or [GitHub app triggers](https://cloud.google.com/cloud-build/docs/create-github-app-triggers). This repository provides the necessary files for installing Spinnaker for GCP with a gcloud triggered build. Follow these steps to start a build:
+Cloud Builds can be triggered using [gcloud](https://cloud.google.com/cloud-build/docs/running-builds/start-build-manually), [build triggers](https://cloud.google.com/cloud-build/docs/running-builds/automate-builds), or [GitHub app triggers](https://cloud.google.com/cloud-build/docs/create-github-app-triggers). This repository provides the necessary files for installing Spinnaker for GCP with a gcloud triggered build. Follow these steps to start a build:
 
 1. Create a new directory. The contents of this directory will be submitted to Cloud Build.
 2. Place the generated properties file into the directory.
